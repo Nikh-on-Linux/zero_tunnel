@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-PC Web Terminal</title>
+    <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">❯_</div>
+            <h1>Multi-PC Web Terminal</h1>
+        </div>
+        <div class="connection-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+    </header>
+    
+    <div class="container">
+        <aside class="sidebar">
+             <div class="sidebar-block">
+                <h2>🖥️ Select a PC</h2>
+                <div id="pc-selector" class="quick-commands">
+                    </div>
+            </div>
+            
+            <div class="sidebar-block warning">
+                <h3>⚠️ Notice</h3>
+                <p>Select a PC to establish a terminal connection. All commands are executed on the selected remote machine.</p>
+            </div>
+        </aside>
+        
+        <main class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-controls">
+                    <div class="control-btn close"></div>
+                    <div class="control-btn minimize"></div>
+                    <div class="control-btn maximize"></div>
+                </div>
+                <div id="terminalTitle" class="terminal-title">Select a PC to begin</div>
+            </div>
+            <div id="terminal"></div>
+            <div class="terminal-footer">
+                <div id="terminalSize">80x24</div>
+                <div>Xterm.js + Node.js</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/xterm/lib/xterm.js"></script>
+    <script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script src="https://unpkg.com/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
