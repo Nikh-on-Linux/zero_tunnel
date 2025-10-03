@@ -3,6 +3,9 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const http = require('http');
 const socketIo = require('socket.io');
+const {configDotenv} = require("dotenv");
+
+configDotenv();
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +18,7 @@ const browserSessions = new Map(); // Stores browser sockets, keyed by their soc
 // --- SECURITY WARNING ---
 // Change these credentials for any real-world use!
 app.use(basicAuth({
-    users: { 'admin': 'password123' },
+    users: { 'infinity': '1/0' },
     challenge: true,
     realm: 'Web Terminal Login'
 }));

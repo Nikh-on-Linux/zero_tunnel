@@ -1,9 +1,9 @@
 const pty = require('node-pty');
 const io = require('socket.io-client');
-
+require('dotenv').config()
 // --- AGENT CONFIGURATION ---
-const AGENT_NAME = "Local Machine"; // IMPORTANT: Give each agent a unique name
-const MASTER_SERVER_URL = "https://6e0ee790599209.lhr.life"; // URL of your master server
+const AGENT_NAME = "Lab-28"; // IMPORTANT: Give each agent a unique name
+const MASTER_SERVER_URL = process.env.ROOT_URL; // URL of your master server
 // -------------------------
 
 console.log(`[AGENT] Starting agent: ${AGENT_NAME}`);
