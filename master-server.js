@@ -159,7 +159,7 @@ agents.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
     console.log(`Master Proxy Server running on port ${PORT}`);
     console.log(`Access at: http://localhost:${PORT}`);
