@@ -146,6 +146,12 @@ header {
     color: white;
 }
 
+.no-agents-msg {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-style: italic;
+}
+
 .warning {
     border-left: 4px solid #ffbd2e;
 }
@@ -190,9 +196,11 @@ header {
     width: 12px;
     height: 12px;
     border-radius: 50%;
+    cursor: pointer;
 }
 
 .close { background-color: #ff5f56; }
+.close:hover { background-color: #c0423c; }
 .minimize { background-color: #ffbd2e; }
 .maximize { background-color: #27ca3f; }
 
@@ -205,6 +213,18 @@ header {
     flex: 1;
     padding: 10px;
     overflow: hidden;
+}
+
+.xterm .xterm-viewport {
+    /* Hide scrollbar by default, xterm handles scrolling */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+    /* WebKit */
+    width: 0;
+    height: 0;
 }
 
 .terminal-footer {

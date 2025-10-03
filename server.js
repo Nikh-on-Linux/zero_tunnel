@@ -1,71 +1,111 @@
 const pty = require('node-pty');
 const io = require('socket.io-client');
+require('dotenv').config();
 
 // --- AGENT CONFIGURATION ---
-const AGENT_NAME = "Local Machine"; // IMPORTANT: Give each agent a unique name
-const MASTER_SERVER_URL = "https://6e0ee790599209.lhr.life"; // URL of your master server
+// IMPORTANT: Give each agent a unique name. This can be set via an environment variable
+// or hardcoded. For example: AGENT_NAME = process.env.AGENT_NAME || "Lab-PC-01";
+const AGENT_NAME = "Lab-28";
+const MASTER_SERVER_URL = "http://localhost:4000";
 // -------------------------
 
 console.log(`[AGENT] Starting agent: ${AGENT_NAME}`);
+
+// Connect to the '/agents' namespace on the master server
 const masterSocket = io(`${MASTER_SERVER_URL}/agents`, {
     reconnection: true,
     reconnectionDelay: 5000,
-    reconnectionAttempts: Infinity
+    reconnectionAttempts: Infinity,
+    transports: ['websocket'], // Force websocket for better performance
 });
 
-let ptyProcess = null;
+// Use a Map to store and manage PTY processes for multiple concurrent browser sessions.
+// The key is the browser's socket.id, and the value is the ptyProcess object.
+const ptyProcesses = new Map();
 
-function createPtyProcess() {
+/**
+ * Creates a new pseudo-terminal (PTY) process for a given browser session.
+ * @param {string} browserId - The unique socket.id of the connecting browser client.
+ */
+function createPtyProcess(browserId) {
+    // If a PTY already exists for this browser, kill it to ensure a fresh session.
+    if (ptyProcesses.has(browserId)) {
+        ptyProcesses.get(browserId).kill();
+        console.log(`[AGENT] Killed existing PTY for ${browserId}.`);
+    }
+
     const shell = process.platform === 'win32' ? 'powershell.exe' : 'bash';
-    ptyProcess = pty.spawn(shell, [], {
+    const ptyProcess = pty.spawn(shell, [], {
         name: 'xterm-color',
         cols: 80,
         rows: 24,
-        cwd: process.env.HOME,
+        cwd: process.env.HOME || process.cwd(),
         env: process.env
     });
 
-    // Listen for data from the PTY and send it to the master server
+    // Listen for data (output) from the PTY process.
     ptyProcess.onData((data) => {
-        masterSocket.emit('terminal-output', data);
+        // Send the output to the master server, specifying which browser it belongs to.
+        masterSocket.emit('terminal-output', { browserId, data });
     });
 
-    console.log('[AGENT] PTY process created.');
+    // Store the new PTY process in the map.
+    ptyProcesses.set(browserId, ptyProcess);
+    console.log(`[AGENT] New PTY process created for browser: ${browserId}`);
 }
+
+// --- Socket.IO Event Handlers ---
 
 masterSocket.on('connect', () => {
     console.log(`[AGENT] Connected to master server at ${MASTER_SERVER_URL}`);
+    // Register this agent with the master server using its unique name.
     masterSocket.emit('agent-register', AGENT_NAME);
-    
-    // Create a new PTY process for this connection
-    if (!ptyProcess) {
-        createPtyProcess();
-    }
 });
 
-// Listen for input from the master server and write it to the PTY
-masterSocket.on('terminal-input', (data) => {
+// --- Event: 'create-new-terminal' ---
+// Master server instructs this agent to create a new terminal session for a browser.
+masterSocket.on('create-new-terminal', ({ browserId }) => {
+    createPtyProcess(browserId);
+});
+
+// --- Event: 'terminal-input' ---
+// Master server forwards keyboard input from a browser.
+masterSocket.on('terminal-input', ({ browserId, data }) => {
+    const ptyProcess = ptyProcesses.get(browserId);
     if (ptyProcess) {
         ptyProcess.write(data);
     }
 });
 
-// Listen for resize events from the master
-masterSocket.on('terminal-resize', (data) => {
+// --- Event: 'terminal-resize' ---
+// Master server forwards a resize event from a browser.
+masterSocket.on('terminal-resize', ({ browserId, size }) => {
+    const ptyProcess = ptyProcesses.get(browserId);
     if (ptyProcess) {
-        ptyProcess.resize(data.cols, data.rows);
-        console.log(`[AGENT] Terminal resized to ${data.cols}x${data.rows}`);
+        ptyProcess.resize(size.cols, size.rows);
+        console.log(`[AGENT] Terminal for ${browserId} resized to ${size.cols}x${size.rows}`);
+    }
+});
+
+// --- Event: 'close-terminal' ---
+// Master server instructs this agent to terminate a specific PTY process.
+masterSocket.on('close-terminal', ({ browserId }) => {
+    const ptyProcess = ptyProcesses.get(browserId);
+    if (ptyProcess) {
+        ptyProcess.kill();
+        ptyProcesses.delete(browserId);
+        console.log(`[AGENT] PTY process killed for browser: ${browserId}`);
     }
 });
 
 masterSocket.on('disconnect', (reason) => {
     console.error(`[AGENT] Disconnected from master server: ${reason}`);
-    // The PTY process can be killed and recreated on reconnect to ensure a fresh session
-    if (ptyProcess) {
+    // Clean up all active PTY processes when the agent disconnects from the master.
+    for (const [browserId, ptyProcess] of ptyProcesses.entries()) {
         ptyProcess.kill();
-        ptyProcess = null;
-        console.log('[AGENT] PTY process killed.');
+        console.log(`[AGENT] Killed PTY for ${browserId} due to disconnection.`);
     }
+    ptyProcesses.clear();
 });
 
 masterSocket.on('connect_error', (err) => {
