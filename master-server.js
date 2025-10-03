@@ -3,9 +3,6 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const http = require('http');
 const socketIo = require('socket.io');
-const { configDotenv } = require("dotenv");
-
-configDotenv();
 
 const app = express();
 const server = http.createServer(app);

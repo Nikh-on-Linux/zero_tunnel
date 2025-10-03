@@ -6,7 +6,7 @@ require('dotenv').config();
 // IMPORTANT: Give each agent a unique name. This can be set via an environment variable
 // or hardcoded. For example: AGENT_NAME = process.env.AGENT_NAME || "Lab-PC-01";
 const AGENT_NAME = "Lab-28";
-const MASTER_SERVER_URL = "http://localhost:4000";
+const MASTER_SERVER_URL = process.env.ROOT_URL;
 // -------------------------
 
 console.log(`[AGENT] Starting agent: ${AGENT_NAME}`);
