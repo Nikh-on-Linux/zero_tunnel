@@ -5,7 +5,7 @@ require('dotenv').config();
 // --- AGENT CONFIGURATION ---
 // IMPORTANT: Give each agent a unique name. This can be set via an environment variable
 // or hardcoded. For example: AGENT_NAME = process.env.AGENT_NAME || "Lab-PC-01";
-const AGENT_NAME = process.env.SYSTEM_NAME;
+const AGENT_NAME = "Lab-28";
 const MASTER_SERVER_URL = process.env.ROOT_URL;
 // -------------------------
 
